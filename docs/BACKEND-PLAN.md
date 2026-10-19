@@ -136,7 +136,7 @@ kpis, revenue-trend, category-shares, traffic-sources, hourly-traffic, recent-or
 cd backend
 uv add pydantic-settings tzdata
 uv add --dev ruff ty pytest      # httpx는 fastapi[standard]에 포함 (0.28.1 확인)
-uv run fastapi dev               # :8000
+uv run fastapi dev --port 8010   # 8000은 이 PC에서 다른 프로세스가 사용 중
 uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run ty check
 ```
 - ruff는 `select`에 `"FAST"`(FastAPI 규칙, 확인함)를 추가하고, 나머지는 템플릿 규칙을 기준으로 해요.
@@ -149,7 +149,10 @@ uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run t
   - `res.ok`면 응답 틀에서 `.data`만 꺼내 반환해요. 컴포넌트는 지금처럼 데이터만 받아요.
   - `!res.ok`면 본문(`ApiError`)의 `code`/`message`를 담아 throw해요.
 - `getNavBadges`는 `getTodos()`를 쓰게 바꿔요.
-- `.env.local`에는 `API_URL=http://localhost:8000`을 넣어요.
+- `.env.local`에는 `API_URL=http://127.0.0.1:8010`을 넣어요 (예시: 루트 `.env.example`).
+  - `localhost` 대신 `127.0.0.1`: Node 20 fetch가 `localhost`를 IPv6(`::1`)로 풀면 uvicorn(127.0.0.1)에 연결되지 않아요.
+- `try/catch`에서 `unstable_rethrow(e)`를 먼저 불러요. 빌드 중 `no-store` fetch가 던지는 Next 내부 신호(DYNAMIC_SERVER_USAGE)를 삼키면 빌드가 실패해요.
+- `getTodos`는 `React.cache`로 묶어요. 레이아웃(배지)과 페이지가 함께 부르는데, `signal` 옵션 때문에 fetch 자동 중복 제거가 안 돼요.
 - 캐시 옵션은 `cache: "no-store"`로 정했어요.
   - `cacheComponents`가 꺼져 있으면 옵션 없는 fetch는 `next build` 때 한 번 실행되고 결과가 고정돼요
     (`node_modules/next/dist/docs/01-app/02-guides/caching-without-cache-components.md:111`).
@@ -169,12 +172,12 @@ uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run t
    - 키가 camelCase인지
    - hourly-traffic이 168개인지
    - health-check가 응답하는지
-5. `api.ts`를 바꾸고 `/admin`이 기존 화면과 같은지 확인해요(KPI 5.9%, 히트맵, 배지).
-6. `crud/dashboard.py`의 값을 바꾸면 화면에 반영되는지 확인해요. API_URL이 없으면 mock, 백엔드를 끄면 에러가 나는지 확인해요.
-7. `npx tsc --noEmit`, `npm run lint`, `npm run build`가 통과하는지 확인해요.
+5. `api.ts`를 바꾸고 `/admin`이 기존 화면과 같은지 확인해요(KPI 5.9%, 히트맵, 배지). ✅ 2026-10-19 (주문 수만 8.1 → 8.2, 백엔드 요청 8건씩)
+6. `crud/dashboard.py`의 값을 바꾸면 화면에 반영되는지 확인해요. API_URL이 없으면 mock, 백엔드를 끄면 에러가 나는지 확인해요. ✅ 2026-10-19 (백엔드 끔 → error 화면, 켜고 "다시 시도" → 복구. 운영 빌드에서 확인)
+7. `npx tsc --noEmit`, `npm run lint`, `npm run build`가 통과하는지 확인해요. ✅ 2026-10-19 (백엔드 끈 상태로 build 통과)
    - 백엔드를 끈 상태에서도 `npm run build`가 통과해야 해요 (빌드 때 fetch하지 않는다는 뜻).
    - 백엔드를 끄고 `/admin`에 들어가면 직접 만든 에러 화면이 나와야 해요.
-8. CLAUDE.md를 갱신해요.
+8. CLAUDE.md를 갱신해요. ✅ 2026-10-19
    - 백엔드 명령어와 구조
    - "`dashboard.ts`와 `schemas/dashboard.py`는 함께 수정" 규칙
    - 스킬 위치 메모

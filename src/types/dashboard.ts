@@ -39,6 +39,7 @@ export type Order = {
   customer: string;
   amount: number;
   status: OrderStatus;
+  /** ISO 8601, 타임존 포함. 예: "2026-09-30T13:42:00+09:00" (표시는 formatTime) */
   orderedAt: string;
 };
 

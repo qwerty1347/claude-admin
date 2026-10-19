@@ -33,6 +33,19 @@ export function withSubjectParticle(word: string): string {
   return `${word}${hasBatchim ? "이" : "가"}`;
 }
 
+// 시간대를 지정하므로 서버(UTC 등)·브라우저 어디서 렌더해도 같은 값 → hydration 불일치 없음
+const timeFormat = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** ISO 시각 → 서울 기준 "13:42" */
+export function formatTime(iso: string): string {
+  return timeFormat.format(new Date(iso));
+}
+
 export function formatPercent(value: number, digits = 1): string {
   return `${value.toFixed(digits)}%`;
 }

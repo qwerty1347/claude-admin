@@ -11,7 +11,7 @@ import type {
 
 export const kpis: Kpi[] = [
   { key: "revenue", label: "매출", value: 128_450_000, unit: "won", change: 5.9 },
-  { key: "orders", label: "주문 수", value: 3_842, unit: "count", change: 8.1 },
+  { key: "orders", label: "주문 수", value: 3_842, unit: "count", change: 8.2 },
   { key: "signups", label: "신규 가입자", value: 1_216, unit: "count", change: -3.2 },
   { key: "conversion", label: "전환율", value: 3.46, unit: "percent", change: 0.4 },
 ];
@@ -67,13 +67,13 @@ export const hourlyTraffic: HourlyTraffic = {
 };
 
 export const recentOrders: Order[] = [
-  { id: "ORD-260930-1042", customer: "김민준", amount: 128_000, status: "paid", orderedAt: "2026-09-30 13:42" },
-  { id: "ORD-260930-1041", customer: "이서연", amount: 54_900, status: "shipping", orderedAt: "2026-09-30 13:15" },
-  { id: "ORD-260930-1040", customer: "박지훈", amount: 312_500, status: "delivered", orderedAt: "2026-09-30 12:58" },
-  { id: "ORD-260930-1039", customer: "최수아", amount: 19_800, status: "cancelled", orderedAt: "2026-09-30 12:31" },
-  { id: "ORD-260930-1038", customer: "정도윤", amount: 87_300, status: "paid", orderedAt: "2026-09-30 11:47" },
-  { id: "ORD-260930-1037", customer: "강하은", amount: 243_000, status: "shipping", orderedAt: "2026-09-30 11:09" },
-  { id: "ORD-260930-1036", customer: "윤시우", amount: 66_400, status: "delivered", orderedAt: "2026-09-30 10:22" },
+  { id: "ORD-260930-1042", customer: "김민준", amount: 128_000, status: "paid", orderedAt: "2026-09-30T13:42:00+09:00" },
+  { id: "ORD-260930-1041", customer: "이서연", amount: 54_900, status: "shipping", orderedAt: "2026-09-30T13:15:00+09:00" },
+  { id: "ORD-260930-1040", customer: "박지훈", amount: 312_500, status: "delivered", orderedAt: "2026-09-30T12:58:00+09:00" },
+  { id: "ORD-260930-1039", customer: "최수아", amount: 19_800, status: "cancelled", orderedAt: "2026-09-30T12:31:00+09:00" },
+  { id: "ORD-260930-1038", customer: "정도윤", amount: 87_300, status: "paid", orderedAt: "2026-09-30T11:47:00+09:00" },
+  { id: "ORD-260930-1037", customer: "강하은", amount: 243_000, status: "shipping", orderedAt: "2026-09-30T11:09:00+09:00" },
+  { id: "ORD-260930-1036", customer: "윤시우", amount: 66_400, status: "delivered", orderedAt: "2026-09-30T10:22:00+09:00" },
 ];
 
 export const todos: TodoItem[] = [
