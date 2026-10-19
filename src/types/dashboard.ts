@@ -1,10 +1,23 @@
+export type ComparePeriod = "day" | "week" | "month";
+
+/** 같은 기간끼리 비교한 값. 증감률·차이는 화면에서 계산한다. */
+export type KpiComparison = {
+  /** day: 오늘 vs 어제 같은 시각 / week: 이번 주 vs 지난주 / month: 이번 달 vs 지난달 */
+  period: ComparePeriod;
+  current: number;
+  previous: number;
+};
+
 export type Kpi = {
   key: "revenue" | "orders" | "signups" | "conversion";
   label: string;
+  /** 이번 달 값 */
   value: number;
   unit: "won" | "count" | "percent";
-  /** 전기 대비 증감률 (%) */
+  /** 지난달 대비 증감. count·won 은 %, percent 는 %p */
   change: number;
+  /** 전일·지난주·지난달 비교 (하단 KPI 의 굴러가는 띠) */
+  comparisons: KpiComparison[];
 };
 
 export type RevenueTrend = {

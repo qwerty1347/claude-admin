@@ -6,8 +6,10 @@
 from app.schemas.common import ApiError, ApiResponse, CamelModel, FieldError
 from app.schemas.dashboard import (
     CategoryShare,
+    ComparePeriod,
     HourlyTraffic,
     Kpi,
+    KpiComparison,
     OrderStatus,
     RecentOrder,
     RevenueTrend,
@@ -22,9 +24,11 @@ __all__ = [
     "ApiResponse",
     "CamelModel",
     "CategoryShare",
+    "ComparePeriod",
     "FieldError",
     "HourlyTraffic",
     "Kpi",
+    "KpiComparison",
     "OrderStatus",
     "RecentOrder",
     "RevenueTrend",

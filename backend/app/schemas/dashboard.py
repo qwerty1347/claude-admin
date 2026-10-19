@@ -6,14 +6,27 @@ from pydantic import AwareDatetime
 
 from app.schemas.common import CamelModel
 
+ComparePeriod = Literal["day", "week", "month"]
+
+
+class KpiComparison(CamelModel):
+    """같은 기간끼리 비교한 값. 증감률·차이는 프론트가 계산한다."""
+
+    period: ComparePeriod
+    """day: 오늘 vs 어제 같은 시각 / week: 이번 주 vs 지난주 / month: 이번 달 vs 지난달"""
+    current: int | float
+    previous: int | float
+
 
 class Kpi(CamelModel):
     key: Literal["revenue", "orders", "signups", "conversion"]
     label: str
-    value: int | float  # 금액·건수는 정수, 전환율 등은 실수
+    value: int | float  # 이번 달 값. 금액·건수는 정수, 전환율 등은 실수
     unit: Literal["won", "count", "percent"]
     change: float
-    """전기 대비 증감률 (%)"""
+    """지난달 대비 증감. count·won 은 %, percent 는 %p"""
+    comparisons: list[KpiComparison] = []
+    """전일·지난주·지난달 비교 (대시보드 하단 KPI 의 굴러가는 띠)"""
 
 
 class RevenueTrend(CamelModel):

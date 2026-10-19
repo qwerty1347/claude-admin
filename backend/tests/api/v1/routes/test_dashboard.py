@@ -50,6 +50,19 @@ def test_kpis_computed_from_revenue_trend(client: TestClient) -> None:
     assert kpis["orders"]["change"] == 8.2
 
 
+def test_kpi_comparisons(client: TestClient) -> None:
+    kpis = {k["key"]: k for k in get_data(client, "kpis")}
+    for key in ("orders", "signups", "conversion"):
+        comps = {c["period"]: c for c in kpis[key]["comparisons"]}
+        assert list(comps) == ["day", "week", "month"]
+        # 지난달 비교의 이번 달 값 = KPI 값
+        assert comps["month"]["current"] == kpis[key]["value"]
+    assert kpis["orders"]["comparisons"][-1]["previous"] == 3550  # 매출 추이 8월
+    # change 는 지난달 비교에서 계산 (count 는 %, percent 는 %p)
+    assert kpis["signups"]["change"] == -3.2
+    assert kpis["conversion"]["change"] == 0.4
+
+
 def test_hourly_traffic_shape(client: TestClient) -> None:
     data = get_data(client, "hourly-traffic")
     assert len(data["days"]) == 7

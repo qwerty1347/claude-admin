@@ -6,12 +6,15 @@ DB 를 붙이면 이 함수들의 내부만 바꾸고, 라우트와 응답 모�
 
 import math
 from datetime import datetime
+from typing import Literal
 
 from app.core.config import settings
 from app.schemas import (
     CategoryShare,
+    ComparePeriod,
     HourlyTraffic,
     Kpi,
+    KpiComparison,
     RecentOrder,
     RevenueTrend,
     TodayRevenue,
@@ -172,27 +175,59 @@ TODO_DONE_TODAY = 23
 TODAY_REVENUE = TodayRevenue(today=4_120_000, yesterday_same_time=3_810_000)
 
 
+# 전일·지난주 비교용 mock (current, previous). 전일은 오늘 vs 어제 같은 시각
+DAY_WEEK_MOCK: dict[str, dict[ComparePeriod, tuple[int | float, int | float]]] = {
+    "orders": {"day": (118, 109), "week": (862, 905)},
+    "signups": {"day": (37, 41), "week": (281, 264)},
+    "conversion": {"day": (3.62, 3.41), "week": (3.51, 3.58)},
+}
+
+# 이번 달·지난달 값 (원천 데이터가 없는 KPI 의 mock)
+MONTH_MOCK: dict[str, tuple[int | float, int | float]] = {
+    "signups": (1_216, 1_256),
+    "conversion": (3.46, 3.06),
+}
+
+
+def _kpi(
+    key: Literal["revenue", "orders", "signups", "conversion"],
+    label: str,
+    unit: Literal["won", "count", "percent"],
+    month: tuple[int | float, int | float],
+) -> Kpi:
+    """이번 달 값·지난달 대비 증감과 전일·지난주·지난달 비교를 한 번에 만든다."""
+    current, previous = month
+    # 비율(percent)은 %p 차이, 나머지는 증감률(%)
+    change = (
+        round(current - previous, 1)
+        if unit == "percent"
+        else percent_change(current, previous)
+    )
+    comparisons = [
+        KpiComparison(period=period, current=c, previous=p)
+        for period, (c, p) in DAY_WEEK_MOCK.get(key, {}).items()
+    ]
+    comparisons.append(
+        KpiComparison(period="month", current=current, previous=previous)
+    )
+    return Kpi(
+        key=key,
+        label=label,
+        value=current,
+        unit=unit,
+        change=change,
+        comparisons=comparisons,
+    )
+
+
 def get_kpis() -> list[Kpi]:
-    # 매출·주문 수는 원천 데이터(REVENUE_TREND)에서 계산한다. 별도 숫자를 하드코딩하지 않는다.
+    # 매출·주문 수의 이번 달·지난달은 원천 데이터(REVENUE_TREND)에서 가져온다. 별도 숫자를 하드코딩하지 않는다.
     revenue, orders = REVENUE_TREND.revenue, REVENUE_TREND.orders
     return [
-        Kpi(
-            key="revenue",
-            label="매출",
-            value=revenue[-1],
-            unit="won",
-            change=percent_change(revenue[-1], revenue[-2]),
-        ),
-        Kpi(
-            key="orders",
-            label="주문 수",
-            value=orders[-1],
-            unit="count",
-            change=percent_change(orders[-1], orders[-2]),
-        ),
-        # 신규 가입자·전환율은 원천 데이터가 없어 mock 값
-        Kpi(key="signups", label="신규 가입자", value=1_216, unit="count", change=-3.2),
-        Kpi(key="conversion", label="전환율", value=3.46, unit="percent", change=0.4),
+        _kpi("revenue", "매출", "won", (revenue[-1], revenue[-2])),
+        _kpi("orders", "주문 수", "count", (orders[-1], orders[-2])),
+        _kpi("signups", "신규 가입자", "count", MONTH_MOCK["signups"]),
+        _kpi("conversion", "전환율", "percent", MONTH_MOCK["conversion"]),
     ]
 
 
