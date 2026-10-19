@@ -7,7 +7,13 @@ from pydantic.alias_generators import to_camel
 class CamelModel(BaseModel):
     """파이썬에서는 snake_case, JSON 에서는 camelCase (FastAPI 는 응답을 by_alias 로 직렬화한다)."""
 
-    model_config = ConfigDict(alias_generator=to_camel, validate_by_name=True)
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        validate_by_name=True,
+        # 기본값이 있는 필드도 응답에는 항상 들어가므로 OpenAPI 응답 스키마에서 필수로 표시한다
+        # (예: ApiResponse.statusCode, ApiError.errors). 요청 스키마에서는 그대로 선택 필드.
+        json_schema_serialization_defaults_required=True,
+    )
 
 
 # 성공·실패 판별은 HTTP 상태 코드로 한다. statusCode 는 같은 값을 본문에 한 번 더 적은 것.

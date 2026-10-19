@@ -130,6 +130,12 @@ kpis, revenue-trend, category-shares, traffic-sources, hourly-traffic, recent-or
   - 실패: `raise AppError(409, "ORDER_ALREADY_SHIPPED", "이미 발송된 주문이에요")`.
     `core/errors.py`의 예외 핸들러 4개(AppError, 검증 실패, HTTPException, 예상 못 한 예외)가 모두 `ApiError`로 바꿔요.
   - 미들웨어로 자동 감싸지 않아요. 문서(`/docs`)와 실제 응답이 달라지기 때문이에요.
+- 문서(/docs)와 실제 응답 맞추기 (2026-10-19 리뷰 반영)
+  - 기본값이 있는 응답 필드(`statusCode`, `code`, `errors` 등)도 필수로 표시해요: `CamelModel`의 `json_schema_serialization_defaults_required=True`.
+  - 실패 응답 문서는 실제로 낼 수 있는 상태만 붙여요. 공통(`api/main.py`)은 500만, 나머지는 라우트에서 `responses=error_responses(404, 422)`.
+    파라미터가 있는 라우트는 FastAPI가 기본 형식 422를 자동으로 붙이므로 `error_responses(422)`로 덮어써요.
+  - `HTTPException`은 문자열 detail이면 그대로 메시지로 써요. HTTP 기본 문구("Not Found" 등)와 문자열이 아닌 detail은 한글 기본 문구로 바꿔요.
+    업무 에러는 code를 지정할 수 있는 `AppError`로 던지는 게 팀 규칙이에요.
 
 ## 툴링
 ```bash

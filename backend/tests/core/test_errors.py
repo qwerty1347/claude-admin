@@ -3,7 +3,7 @@
 from typing import Annotated
 
 import pytest
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.testclient import TestClient
 
 from app.core.errors import AppError, register_exception_handlers
@@ -29,6 +29,18 @@ def build_app() -> FastAPI:
     @test_app.get("/boom")
     def boom() -> None:
         raise RuntimeError("secret internal detail")
+
+    @test_app.get("/http-detail")
+    def http_detail() -> None:
+        raise HTTPException(404, "주문을 찾을 수 없어요")
+
+    @test_app.get("/http-dict-detail")
+    def http_dict_detail() -> None:
+        raise HTTPException(400, {"reason": "internal"})
+
+    @test_app.get("/http-unknown-status")
+    def http_unknown_status() -> None:
+        raise HTTPException(418)
 
     return test_app
 
@@ -100,3 +112,23 @@ def test_real_app_unknown_path_uses_error_format() -> None:
     r = TestClient(main_app).get("/api/v1/nope")
     assert r.status_code == 404
     assert r.json()["code"] == "NOT_FOUND"
+
+
+def test_http_exception_string_detail_is_kept(client: TestClient) -> None:
+    body = client.get("/http-detail").json()
+    assert body["code"] == "NOT_FOUND"
+    assert body["message"] == "주문을 찾을 수 없어요"
+
+
+def test_http_exception_non_string_detail_uses_default(client: TestClient) -> None:
+    body = client.get("/http-dict-detail").json()
+    assert body["code"] == "BAD_REQUEST"
+    assert body["message"] == "잘못된 요청이에요"
+    assert "internal" not in str(body)
+
+
+def test_http_exception_unknown_status_uses_fallback(client: TestClient) -> None:
+    r = client.get("/http-unknown-status")
+    assert r.status_code == 418
+    assert r.json()["code"] == "ERROR"
+    assert r.json()["message"] == "요청을 처리하지 못했어요"
