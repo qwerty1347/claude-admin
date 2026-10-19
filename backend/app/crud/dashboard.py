@@ -8,7 +8,7 @@ import math
 from datetime import datetime
 
 from app.core.config import settings
-from app.models import (
+from app.schemas import (
     CategoryShare,
     HourlyTraffic,
     Kpi,

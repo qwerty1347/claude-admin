@@ -1,15 +1,10 @@
-"""응답 모델. 프론트 src/types/dashboard.ts 와 1:1 로 맞춘다 (둘은 함께 수정한다)."""
+"""대시보드 응답 스키마. 프론트 src/types/dashboard.ts 와 1:1 로 맞춘다 (둘은 함께 수정한다)."""
 
 from typing import Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from pydantic import AwareDatetime
 
-
-class CamelModel(BaseModel):
-    """파이썬에서는 snake_case, JSON 에서는 camelCase (FastAPI 는 응답을 by_alias 로 직렬화한다)."""
-
-    model_config = ConfigDict(alias_generator=to_camel, validate_by_name=True)
+from app.schemas.common import CamelModel
 
 
 class Kpi(CamelModel):

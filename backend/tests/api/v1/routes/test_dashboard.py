@@ -1,9 +1,21 @@
+from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
 
 BASE = f"{settings.API_PREFIX}/v1/dashboard"
+
+
+def get_data(client: TestClient, path: str) -> Any:
+    """성공 응답 틀을 확인하고 data 만 꺼낸다."""
+    r = client.get(f"{BASE}/{path}")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["statusCode"] == 200
+    assert body["code"] == "OK"
+    return body["data"]
 
 
 @pytest.mark.parametrize(
@@ -19,19 +31,19 @@ BASE = f"{settings.API_PREFIX}/v1/dashboard"
         "today-revenue",
     ],
 )
-def test_endpoints_ok(client: TestClient, path: str) -> None:
-    assert client.get(f"{BASE}/{path}").status_code == 200
+def test_endpoints_return_success_envelope(client: TestClient, path: str) -> None:
+    assert get_data(client, path) is not None
 
 
 def test_keys_are_camel_case(client: TestClient) -> None:
-    assert "lastYearSameMonthRevenue" in client.get(f"{BASE}/revenue-trend").json()
-    assert "orderedAt" in client.get(f"{BASE}/recent-orders").json()[0]
-    assert "doneToday" in client.get(f"{BASE}/todos").json()
-    assert "yesterdaySameTime" in client.get(f"{BASE}/today-revenue").json()
+    assert "lastYearSameMonthRevenue" in get_data(client, "revenue-trend")
+    assert "orderedAt" in get_data(client, "recent-orders")[0]
+    assert "doneToday" in get_data(client, "todos")
+    assert "yesterdaySameTime" in get_data(client, "today-revenue")
 
 
 def test_kpis_computed_from_revenue_trend(client: TestClient) -> None:
-    kpis = {k["key"]: k for k in client.get(f"{BASE}/kpis").json()}
+    kpis = {k["key"]: k for k in get_data(client, "kpis")}
     assert kpis["revenue"]["value"] == 128_450_000
     assert kpis["revenue"]["change"] == 5.9
     assert kpis["orders"]["value"] == 3842
@@ -39,7 +51,7 @@ def test_kpis_computed_from_revenue_trend(client: TestClient) -> None:
 
 
 def test_hourly_traffic_shape(client: TestClient) -> None:
-    data = client.get(f"{BASE}/hourly-traffic").json()
+    data = get_data(client, "hourly-traffic")
     assert len(data["days"]) == 7
     assert len(data["hours"]) == 24
     assert len(data["values"]) == 168
@@ -50,12 +62,12 @@ def test_hourly_traffic_shape(client: TestClient) -> None:
 
 
 def test_ordered_at_is_seoul_time(client: TestClient) -> None:
-    orders = client.get(f"{BASE}/recent-orders").json()
+    orders = get_data(client, "recent-orders")
     assert orders[0]["orderedAt"] == "2026-09-30T13:42:00+09:00"
     assert all(o["orderedAt"].endswith("+09:00") for o in orders)
 
 
 def test_todo_urgent_defaults_to_false(client: TestClient) -> None:
-    items = {i["key"]: i for i in client.get(f"{BASE}/todos").json()["items"]}
+    items = {i["key"]: i for i in get_data(client, "todos")["items"]}
     assert items["pending-orders"]["urgent"] is True
     assert items["low-stock"]["urgent"] is False

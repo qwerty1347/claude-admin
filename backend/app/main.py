@@ -3,11 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
 from app.core.config import settings
+from app.core.errors import register_exception_handlers
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_PREFIX}/openapi.json",
 )
+
+register_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,

@@ -28,8 +28,12 @@ backend/
 ├── uv.lock, .python-version, .env.example
 ├── app/
 │   ├── main.py        # [TPL] FastAPI(), CORS, app.include_router(api_router)
-│   ├── models.py      # [TPL] 응답 모델 (camelCase 공통 베이스 포함)
-│   ├── crud.py        # [TPL 이름] 조회 함수. 1단계는 내부에 mock 데이터 [근거 없음: mock 위치]
+│   ├── schemas/       # API 요청·응답 스키마 (Pydantic). 도메인별 파일 [TPL-0.5: schemas/ 분리]
+│   │   ├── __init__.py   # 다시 내보내기 → from app.schemas import Kpi
+│   │   ├── common.py     # CamelModel, ApiResponse[T], ApiError, FieldError
+│   │   └── dashboard.py  # Kpi ~ TodayRevenue (dashboard.ts 와 1:1)
+│   ├── crud/          # 조회·저장 함수. 도메인별 파일 (schemas/ 와 같은 이름) [TPL-0.5: crud/ 분리]
+│   │   └── dashboard.py  # 대시보드 조회 8개. 1단계는 내부에 mock 데이터 [근거 없음: mock 위치]
 │   ├── utils.py       # [TPL] 범용 헬퍼: round_half_up, percent_change
 │   ├── core/config.py # [TPL] Settings: API_PREFIX, PROJECT_NAME, ENVIRONMENT, FRONTEND_HOST, TIMEZONE
 │   ├── core/clock.py  # utcnow()/now()/start_of_today() [근거 없음: 모듈 분리는 제 선택]
@@ -57,13 +61,15 @@ backend/
 ## 헬퍼 위치
 - Python에는 전역 헬퍼가 없어서 모듈에 두고 import해서 써요.
 - 범용 함수(두 곳 이상에서 사용) → `app/utils.py`. 많아지면 `app/utils/` 패키지(`text.py`, `money.py` …)로 나눠요.
-- 한 기능에서만 쓰는 함수 → 그 기능 근처(`crud.py` 등). 앱 기반 기능(설정·시간·보안·DB) → `app/core/`.
+- 한 기능에서만 쓰는 함수 → 그 기능 근처(`crud/<도메인>.py` 등). 앱 기반 기능(설정·시간·보안·DB) → `app/core/`.
 - 화면 표시용 포맷은 프론트 `src/lib/format.ts` 담당이에요. 백엔드는 원래 값을 내려줘요.
 
 ## 확장 구조
 - 라우트는 리소스마다 파일 하나예요. `api/v1/routes/{orders,products,users,settings,login}.py`. [TPL][DOC]
 - DB를 도입할 때 추가할 것: `core/db.py`(SQLModel 세션), `core/security.py`, `alembic/`, `initial_data.py`(mock을 시드로 옮김), `api/deps.py`의 `SessionDep`/`CurrentUserDep`. [TPL][SKILL: SQLModel]
-- 쪼개는 시점: 테이블을 가진 두 번째 도메인이 생기면 `models.py`/`crud.py`를 `models/<엔티티>.py`, `crud/crud_<엔티티>.py` 패키지로 바꿔요. [TPL-0.5]
+- 스키마(API 형태)는 `schemas/<도메인>.py`로 이미 나눴어요 (2026-10-19). DB 테이블 모델은 도입할 때 `models/<엔티티>.py`에 따로 둬요. DB 컬럼과 API로 내보내는 형태는 다를 수 있어서 구분해요. [TPL-0.5]
+- 조회·저장 함수도 `crud/<도메인>.py`로 나눴어요 (2026-10-19). 라우트에서는 `from app.crud import dashboard as dashboard_crud`로 써요.
+- 업무 규칙(상태 변경, 검증, 여러 테이블 처리)이 두꺼워지는 도메인만 `services/<도메인>.py`로 뽑아내요. 처음부터 계층을 나누지는 않아요.
   - `__init__.py`에서 이름을 다시 내보내 기존 import를 유지해요.
   - 이 시점은 제가 정한 기준이에요. [근거 없음: 시점]
 
@@ -76,7 +82,7 @@ backend/
 - DB는 SQLModel, 외부 HTTP는 HTTPX를 써요.
 
 ## 모델 규칙
-- camelCase: `models.py`의 공통 베이스에 `ConfigDict(alias_generator=to_camel, validate_by_name=True)`를 둬요.
+- camelCase: `schemas/common.py`의 공통 베이스 `CamelModel`에 `ConfigDict(alias_generator=to_camel, validate_by_name=True)`를 둬요.
   - pydantic 2.14.1에서 `to_camel`과 `validate_by_name`이 있는 걸 확인했어요.
   - 템플릿은 snake_case로 응답해요. camelCase는 프론트 계약에 맞추려는 선택이에요. [근거 없음: 템플릿 관례 아님]
 - 이름과 타입
@@ -103,6 +109,28 @@ backend/
 kpis, revenue-trend, category-shares, traffic-sources, hourly-traffic, recent-orders, todos, today-revenue
 각각 `api.ts`의 `getKpis` … `getTodayRevenue`와 1:1로 대응해요.
 
+## 응답 규격 (모든 API 공통) ✅ 2026-10-19 적용
+성공·실패 판별은 **HTTP 상태 코드**로 해요. 본문의 `statusCode`는 같은 값을 한 번 더 적은 것(로그·디버깅용)이에요.
+```jsonc
+// 성공 2xx
+{ "statusCode": 200, "code": "OK", "data": ... }
+// 실패 4xx/5xx (HTTP 상태도 같은 값)
+{ "statusCode": 422, "code": "VALIDATION_ERROR", "message": "입력값을 확인해 주세요",
+  "errors": [{ "field": "query.page", "message": "..." }] }
+```
+- 성공은 모두 `code: "OK"`. 생성은 201. 본문 없는 204는 쓰지 않고 200 + `"data": null`.
+- `code`는 프론트가 분기하는 기계용 값, `message`는 사람에게 보여주는 문구. `errors`는 항상 배열(없으면 `[]`).
+- 500은 내부 내용을 본문에 넣지 않고 서버 로그에만 남겨요.
+- 공통 code: `BAD_REQUEST`(400) `UNAUTHORIZED`(401) `FORBIDDEN`(403) `NOT_FOUND`(404) `METHOD_NOT_ALLOWED`(405)
+  `CONFLICT`(409) `VALIDATION_ERROR`(422) `TOO_MANY_REQUESTS`(429) `INTERNAL_ERROR`(500).
+  업무 에러는 `대상_상황` 대문자 스네이크 (`ORDER_ALREADY_SHIPPED`).
+- 구현
+  - 스키마: `schemas/common.py`의 `ApiResponse[T]`, `ApiError`, `FieldError`
+  - 성공: 라우트에서 `return ApiResponse(data=...)`, 반환 타입 `-> ApiResponse[list[Kpi]]` (`/docs`에 data 타입 표시)
+  - 실패: `raise AppError(409, "ORDER_ALREADY_SHIPPED", "이미 발송된 주문이에요")`.
+    `core/errors.py`의 예외 핸들러 4개(AppError, 검증 실패, HTTPException, 예상 못 한 예외)가 모두 `ApiError`로 바꿔요.
+  - 미들웨어로 자동 감싸지 않아요. 문서(`/docs`)와 실제 응답이 달라지기 때문이에요.
+
 ## 툴링
 ```bash
 cd backend
@@ -117,7 +145,9 @@ uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run t
 ## 프론트 (`src/lib/api.ts`만)
 - `request<T>(path, fallback)`를 만들어요.
   - `API_URL`이 없으면 mock을 반환해요.
-  - 있으면 `${API_URL}/api/v1${path}`로 fetch하고, `!res.ok`면 throw해요.
+  - 있으면 `${API_URL}/api/v1${path}`로 fetch해요.
+  - `res.ok`면 응답 틀에서 `.data`만 꺼내 반환해요. 컴포넌트는 지금처럼 데이터만 받아요.
+  - `!res.ok`면 본문(`ApiError`)의 `code`/`message`를 담아 throw해요.
 - `getNavBadges`는 `getTodos()`를 쓰게 바꿔요.
 - `.env.local`에는 `API_URL=http://localhost:8000`을 넣어요.
 - 캐시 옵션은 `cache: "no-store"`로 정했어요.
@@ -127,24 +157,24 @@ uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run t
 - `signal: AbortSignal.timeout(5000)`으로 백엔드가 응답하지 않을 때 무한 대기를 막아요.
 - 에러 화면: `src/app/admin/error.tsx`(페이지 데이터 실패) + `src/app/error.tsx`.
   `getNavBadges`는 `admin/layout.tsx`에서 호출돼서 `admin/error.tsx`로는 잡히지 않아요.
-- KPI의 매출 `value`/`change`는 `crud.py`에서 `revenue_trend`의 마지막 두 달로 `utils.percent_change()`를 써서 계산해요 (CLAUDE.md 원천 데이터 규칙).
+- KPI의 매출 `value`/`change`는 `crud/dashboard.py`에서 `revenue_trend`의 마지막 두 달로 `utils.percent_change()`를 써서 계산해요 (CLAUDE.md 원천 데이터 규칙).
 - API 연동이 확인되면 `mock-data.ts` 대체 경로를 없애서 mock을 백엔드 하나로 줄여요.
 - 루트 `.env.example`(API_URL)을 커밋하려면 `.gitignore`에 `!/.env.example`을 추가해요.
 
 ## 구현 순서와 검증
 1. 의존성 추가 → `core/config.py`, `core/clock.py`, `main.py`, `api/main.py`, `api/v1/routes/utils.py` ✅ 2026-10-19 완료
-2. `models.py`, `crud.py`, `api/v1/routes/dashboard.py`(+ `api/v1/__init__.py`에 include), 테스트 작성 ✅ 2026-10-19 완료 (주문 수 KPI 증감률도 원천 데이터에서 계산: 8.1 → 8.2)
+2. `models.py`(→ 이후 `schemas/`로 분리), `crud.py`(→ 이후 `crud/dashboard.py`), `api/v1/routes/dashboard.py`(+ `api/v1/__init__.py`에 include), 테스트 작성 ✅ 2026-10-19 완료 (주문 수 KPI 증감률도 원천 데이터에서 계산: 8.1 → 8.2)
 3. pytest, ruff, ty가 통과하는지 확인해요.
 4. `/docs`와 curl로 확인해요.
    - 키가 camelCase인지
    - hourly-traffic이 168개인지
    - health-check가 응답하는지
 5. `api.ts`를 바꾸고 `/admin`이 기존 화면과 같은지 확인해요(KPI 5.9%, 히트맵, 배지).
-6. `crud.py`의 값을 바꾸면 화면에 반영되는지 확인해요. API_URL이 없으면 mock, 백엔드를 끄면 에러가 나는지 확인해요.
+6. `crud/dashboard.py`의 값을 바꾸면 화면에 반영되는지 확인해요. API_URL이 없으면 mock, 백엔드를 끄면 에러가 나는지 확인해요.
 7. `npx tsc --noEmit`, `npm run lint`, `npm run build`가 통과하는지 확인해요.
    - 백엔드를 끈 상태에서도 `npm run build`가 통과해야 해요 (빌드 때 fetch하지 않는다는 뜻).
    - 백엔드를 끄고 `/admin`에 들어가면 직접 만든 에러 화면이 나와야 해요.
 8. CLAUDE.md를 갱신해요.
    - 백엔드 명령어와 구조
-   - "`dashboard.ts`와 `models.py`는 함께 수정" 규칙
+   - "`dashboard.ts`와 `schemas/dashboard.py`는 함께 수정" 규칙
    - 스킬 위치 메모
