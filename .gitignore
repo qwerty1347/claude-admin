@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright mcp (screenshots, logs)
+/.playwright-mcp/
+
+# backend (python)
+/backend/.venv/
+__pycache__/
+*.py[cod]
+/backend/.ruff_cache/
+/backend/.pytest_cache/
+!/backend/.env.example

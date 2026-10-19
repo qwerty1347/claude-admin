@@ -1,26 +1,39 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * 디자인 토큰 — Tailwind 클래스로 사용 (예: bg-surface, text-sub, text-primary)
+ * 회색 단계는 배경 → 선 → 보조 텍스트 → 본문 순으로 진해진다.
+ */
+@theme {
+  --color-canvas: #f2f4f6;
+  --color-surface: #ffffff;
+  --color-line: #e5e8eb;
+  --color-muted: #8b95a1;
+  --color-sub: #4e5968;
+  --color-ink: #191f28;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-primary: #3182f6;
+  --color-primary-strong: #1b64da;
+  --color-primary-weak: #e8f3ff;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* 국내 관례: 증가 = 빨강, 감소 = 파랑 */
+  --color-rise: #f04452;
+  --color-fall: #3182f6;
+
+  --font-sans: var(--font-pretendard), system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  --radius-card: 1.25rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  font-feature-settings: "tnum";
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
