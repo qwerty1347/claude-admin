@@ -133,7 +133,7 @@ uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run t
 
 ## 구현 순서와 검증
 1. 의존성 추가 → `core/config.py`, `core/clock.py`, `main.py`, `api/main.py`, `api/v1/routes/utils.py` ✅ 2026-10-19 완료
-2. `models.py`, `crud.py`, `api/v1/routes/dashboard.py`(+ `api/v1/__init__.py`에 include), 테스트 작성
+2. `models.py`, `crud.py`, `api/v1/routes/dashboard.py`(+ `api/v1/__init__.py`에 include), 테스트 작성 ✅ 2026-10-19 완료 (주문 수 KPI 증감률도 원천 데이터에서 계산: 8.1 → 8.2)
 3. pytest, ruff, ty가 통과하는지 확인해요.
 4. `/docs`와 curl로 확인해요.
    - 키가 camelCase인지
