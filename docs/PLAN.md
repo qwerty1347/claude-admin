@@ -81,8 +81,8 @@ src/
 8. `CLAUDE.md`에 프로젝트 규칙 추가, `.claude/settings.json`(npm 명령 허용), `docs/PLAN.md`를 이 플랜으로 갱신 → 커밋
 
 ## 로컬 실행
-- `npm run dev` → http://localhost:3000 (자동으로 /admin 이동)
-- XAMPP Apache 주소(`localhost/www/...`)로는 동작하지 않음. 반드시 `:3000`.
+- `npm run dev` → http://localhost:3001 (자동으로 /admin 이동)
+- XAMPP Apache 주소(`localhost/www/...`)로는 동작하지 않음. 반드시 `:3001`.
 
 ## 검증
 1. `/` 접속 → `/admin`으로 이동
