@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { formatWon } from "@/lib/format";
+import { formatTime, formatWon } from "@/lib/format";
 import type { Order, OrderStatus } from "@/types/dashboard";
 
 const statusStyle: Record<OrderStatus, { label: string; className: string }> = {
@@ -95,9 +95,7 @@ export default function RecentOrders({ orders }: { orders: Order[] }) {
                     {formatWon(order.amount)}
                   </td>
                   <td className="px-7 py-3.5 text-right text-sub">
-                    <time dateTime={order.orderedAt.replace(" ", "T")}>
-                      {order.orderedAt.split(" ")[1]}
-                    </time>
+                    <time dateTime={order.orderedAt}>{formatTime(order.orderedAt)}</time>
                   </td>
                 </tr>
               );

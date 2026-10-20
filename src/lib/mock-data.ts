@@ -9,11 +9,52 @@ import type {
   TrafficSource,
 } from "@/types/dashboard";
 
+// backend/app/crud/dashboard.py 의 get_kpis() 와 같은 값 (API_URL 없을 때 대체용)
 export const kpis: Kpi[] = [
-  { key: "revenue", label: "매출", value: 128_450_000, unit: "won", change: 5.9 },
-  { key: "orders", label: "주문 수", value: 3_842, unit: "count", change: 8.1 },
-  { key: "signups", label: "신규 가입자", value: 1_216, unit: "count", change: -3.2 },
-  { key: "conversion", label: "전환율", value: 3.46, unit: "percent", change: 0.4 },
+  {
+    key: "revenue",
+    label: "매출",
+    value: 128_450_000,
+    unit: "won",
+    change: 5.9,
+    comparisons: [{ period: "month", current: 128_450_000, previous: 121_300_000 }],
+  },
+  {
+    key: "orders",
+    label: "주문 수",
+    value: 3_842,
+    unit: "count",
+    change: 8.2,
+    comparisons: [
+      { period: "day", current: 118, previous: 109 },
+      { period: "week", current: 862, previous: 905 },
+      { period: "month", current: 3_842, previous: 3_550 },
+    ],
+  },
+  {
+    key: "signups",
+    label: "신규 가입자",
+    value: 1_216,
+    unit: "count",
+    change: -3.2,
+    comparisons: [
+      { period: "day", current: 37, previous: 41 },
+      { period: "week", current: 281, previous: 264 },
+      { period: "month", current: 1_216, previous: 1_256 },
+    ],
+  },
+  {
+    key: "conversion",
+    label: "전환율",
+    value: 3.46,
+    unit: "percent",
+    change: 0.4,
+    comparisons: [
+      { period: "day", current: 3.62, previous: 3.41 },
+      { period: "week", current: 3.51, previous: 3.58 },
+      { period: "month", current: 3.46, previous: 3.06 },
+    ],
+  },
 ];
 
 export const revenueTrend: RevenueTrend = {
@@ -67,13 +108,13 @@ export const hourlyTraffic: HourlyTraffic = {
 };
 
 export const recentOrders: Order[] = [
-  { id: "ORD-260930-1042", customer: "김민준", amount: 128_000, status: "paid", orderedAt: "2026-09-30 13:42" },
-  { id: "ORD-260930-1041", customer: "이서연", amount: 54_900, status: "shipping", orderedAt: "2026-09-30 13:15" },
-  { id: "ORD-260930-1040", customer: "박지훈", amount: 312_500, status: "delivered", orderedAt: "2026-09-30 12:58" },
-  { id: "ORD-260930-1039", customer: "최수아", amount: 19_800, status: "cancelled", orderedAt: "2026-09-30 12:31" },
-  { id: "ORD-260930-1038", customer: "정도윤", amount: 87_300, status: "paid", orderedAt: "2026-09-30 11:47" },
-  { id: "ORD-260930-1037", customer: "강하은", amount: 243_000, status: "shipping", orderedAt: "2026-09-30 11:09" },
-  { id: "ORD-260930-1036", customer: "윤시우", amount: 66_400, status: "delivered", orderedAt: "2026-09-30 10:22" },
+  { id: "ORD-260930-1042", customer: "김민준", amount: 128_000, status: "paid", orderedAt: "2026-09-30T13:42:00+09:00" },
+  { id: "ORD-260930-1041", customer: "이서연", amount: 54_900, status: "shipping", orderedAt: "2026-09-30T13:15:00+09:00" },
+  { id: "ORD-260930-1040", customer: "박지훈", amount: 312_500, status: "delivered", orderedAt: "2026-09-30T12:58:00+09:00" },
+  { id: "ORD-260930-1039", customer: "최수아", amount: 19_800, status: "cancelled", orderedAt: "2026-09-30T12:31:00+09:00" },
+  { id: "ORD-260930-1038", customer: "정도윤", amount: 87_300, status: "paid", orderedAt: "2026-09-30T11:47:00+09:00" },
+  { id: "ORD-260930-1037", customer: "강하은", amount: 243_000, status: "shipping", orderedAt: "2026-09-30T11:09:00+09:00" },
+  { id: "ORD-260930-1036", customer: "윤시우", amount: 66_400, status: "delivered", orderedAt: "2026-09-30T10:22:00+09:00" },
 ];
 
 export const todos: TodoItem[] = [

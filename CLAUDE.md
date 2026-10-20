@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 프로젝트
 
 한국어 관리자(Admin) 대시보드. Next.js 16 (App Router, Turbopack) + React 19 + TypeScript + Tailwind CSS v4 + ECharts 6.
-백엔드는 아직 없고 모든 데이터는 하드코딩된 mock. 나중에 백엔드 API를 붙일 예정이다.
+백엔드는 `backend/` 의 FastAPI (Python 3.12, uv). 아직 DB 없이 mock 데이터를 API로 내려준다. 상세 계획은 `docs/BACKEND-PLAN.md`.
 
 ## 명령어
 
@@ -18,7 +18,15 @@ npm run lint     # ESLint
 npx tsc --noEmit # 타입 검사만
 ```
 
-- 테스트 프레임워크는 아직 없다.
+```bash
+cd backend
+uv run fastapi dev --port 8010   # 백엔드 → http://127.0.0.1:8010/docs (8000은 이 PC에서 다른 프로세스가 사용 중)
+uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run ty check
+```
+
+- 프론트는 `.env.local` 의 `API_URL` 이 있으면 백엔드를 부르고, 없으면 mock 데이터를 쓴다 (예시: `.env.example`).
+  `localhost` 가 아니라 `127.0.0.1` 로 적는다 (Node fetch 가 `::1` 로 풀면 연결 안 됨).
+- 프론트 테스트 프레임워크는 아직 없다. 백엔드는 pytest.
 - 이 폴더는 XAMPP `htdocs` 아래지만 Apache 주소(`localhost/www/...`)로는 동작하지 않는다. 반드시 `:3001`.
 - Node 20.15 환경이라 일부 ESLint 의존성이 엔진 경고를 내지만 lint는 통과한다.
 
@@ -27,13 +35,16 @@ npx tsc --noEmit # 타입 검사만
 ### 데이터 흐름 (가장 중요한 규칙)
 
 ```
-lib/mock-data.ts  →  lib/api.ts (async 함수)  →  app/admin/page.tsx (서버 컴포넌트, Promise.all)
+backend (FastAPI /api/v1/dashboard/*)  ┐
+lib/mock-data.ts (API_URL 없을 때)      ┴→  lib/api.ts (request<T>)  →  app/admin/page.tsx (서버 컴포넌트, Promise.all)
                                                    →  props  →  클라이언트 컴포넌트 (차트, 토글, 필터)
 ```
 
-- 컴포넌트는 **`src/lib/api.ts` 의 함수만** 호출한다. mock-data를 직접 import하지 않는다.
-  백엔드 연동 시 `api.ts` 함수 내부만 `fetch`로 바꾸면 되도록 하기 위함.
-- 응답 형태는 `src/types/dashboard.ts` 에 정의 (= 향후 API 스키마).
+- 컴포넌트는 **`src/lib/api.ts` 의 함수만** 호출한다. mock-data나 fetch를 직접 쓰지 않는다.
+- 백엔드 응답은 공통 틀로 감싸져 온다: 성공 `{statusCode, code, data}`, 실패 `{statusCode, code, message, errors}`.
+  `request<T>()` 가 `.data` 만 꺼내 반환하고, 실패는 `ApiRequestError` 로 던진다 → `app/admin/error.tsx`, `app/error.tsx`.
+- `request<T>()` 는 `cache: "no-store"` + 5초 타임아웃. `catch` 에서 `unstable_rethrow` 를 먼저 부른다 (빼면 `next build` 실패).
+- 응답 형태는 `src/types/dashboard.ts` 에 정의. **`backend/app/schemas/dashboard.py` 와 함께 수정한다** (JSON 키는 camelCase).
 - 서로 연결된 숫자는 **원천 데이터에서 계산**한다. 예: 매출 증감률·차액은 `RevenueTrend` 배열에서 계산하고,
   `kpis[].change` 같은 별도 하드코딩 값과 섞지 않는다 (이전에 12.4% vs 실제 5.9% 불일치 버그가 있었음).
   사이드바 배지(`getNavBadges`)도 `todos`에서 계산한다.
@@ -77,4 +88,5 @@ lib/mock-data.ts  →  lib/api.ts (async 함수)  →  app/admin/page.tsx (서�
   건드려, **Playwright로 페이지를 열어 둔 채 소스를 수정하면 Fast Refresh가 무한 반복**된다.
   소스 수정 전 `browser_close`, 확인할 때만 다시 연다. ECharts는 그려지기까지 시간이 걸리므로 스크린샷 전 1~2초 대기.
 - 개발 서버가 이미 3001 포트에서 떠 있으면 두 번째 `next dev` 는 바로 종료된다 (기존 서버를 쓰면 됨).
-- `docs/PLAN.md` 에 초기 설계 플랜이 있다.
+- `docs/PLAN.md` 에 초기 설계 플랜, `docs/BACKEND-PLAN.md` 에 백엔드 계획·규칙이 있다.
+- FastAPI 공식 스킬은 `.claude/skills/fastapi/` 에 있다. 백엔드 코드는 이 스킬 규칙(Annotated, 반환 타입, 기본 `def`)을 따른다.

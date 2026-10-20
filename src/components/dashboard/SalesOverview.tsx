@@ -5,7 +5,7 @@ import RevenueTrendChart from "@/components/charts/RevenueTrendChart";
 import RollingTicker from "@/components/common/RollingTicker";
 import Segmented from "@/components/common/Segmented";
 import { formatNumber, formatPercent, formatWonKorean } from "@/lib/format";
-import type { Kpi, RevenueTrend, TodayRevenue } from "@/types/dashboard";
+import type { ComparePeriod, Kpi, RevenueTrend, TodayRevenue } from "@/types/dashboard";
 
 type Range = "6" | "12";
 
@@ -22,6 +22,56 @@ function ChangeBadge({ change, unit }: { change: number; unit: Kpi["unit"] }) {
       {up ? "▲" : "▼"} {Math.abs(change).toFixed(1)}
       {unit === "percent" ? "%p" : "%"}
     </span>
+  );
+}
+
+const periodLabel: Record<ComparePeriod, { short: string; current: string; previous: string }> = {
+  day: { short: "전일 대비", current: "오늘", previous: "어제 같은 시각" },
+  week: { short: "지난주 대비", current: "이번 주", previous: "지난주" },
+  month: { short: "지난달 대비", current: "이번 달", previous: "지난달" },
+};
+
+function formatKpiValue(kpi: Kpi, value: number) {
+  return kpi.unit === "percent" ? formatPercent(value, 2) : formatNumber(value);
+}
+
+/** 하단 KPI 아래에서 전일 → 지난주 → 지난달 비교가 굴러가며 바뀌는 띠 */
+function KpiComparisonTicker({ kpi }: { kpi: Kpi }) {
+  const suffix = unitSuffix[kpi.key] ?? "";
+  const rows = kpi.comparisons.map((c) => {
+    const diff = c.current - c.previous;
+    // 비율(전환율)은 %p 차이, 나머지는 증감률(%)
+    const change = kpi.unit === "percent" ? diff : (diff / c.previous) * 100;
+    return { ...c, diff, change, label: periodLabel[c.period] };
+  });
+
+  return (
+    <RollingTicker
+      lineHeight={28}
+      srLabel={`${kpi.label} 비교`}
+      srItems={rows.map(
+        (r) =>
+          `${r.label.current} ${formatKpiValue(kpi, r.current)}${suffix}, ${r.label.previous} ${formatKpiValue(kpi, r.previous)}${suffix}보다 ` +
+          `${Math.abs(r.change).toFixed(1)}${kpi.unit === "percent" ? "%p" : "%"} ${r.diff >= 0 ? "늘었어요" : "줄었어요"}`,
+      )}
+      items={rows.map((r) => (
+        <span
+          key={r.period}
+          className="flex items-center gap-1.5 text-[13px] whitespace-nowrap"
+          title={`${r.label.current} ${formatKpiValue(kpi, r.current)}${suffix} · ${r.label.previous} ${formatKpiValue(kpi, r.previous)}${suffix}`}
+        >
+          <span className="text-sub">{r.label.short}</span>
+          <ChangeBadge change={r.change} unit={kpi.unit} />
+          {kpi.unit !== "percent" && (
+            <span className={`font-semibold ${r.diff >= 0 ? "text-rise" : "text-fall"}`}>
+              {r.diff >= 0 ? "+" : "−"}
+              {formatNumber(Math.abs(r.diff))}
+              {suffix}
+            </span>
+          )}
+        </span>
+      ))}
+    />
   );
 }
 
@@ -116,14 +166,16 @@ export default function SalesOverview({ kpis, trend, today }: Props) {
             className="border-line px-7 py-5 not-first:border-t sm:not-first:border-t-0 sm:not-first:border-l"
           >
             <dt className="text-[14px] text-muted">{kpi.label}</dt>
-            <dd className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <dd className="mt-1">
               <span className="text-[22px] font-bold tracking-tight text-ink">
-                {kpi.unit === "percent" ? formatPercent(kpi.value, 2) : formatNumber(kpi.value)}
+                {formatKpiValue(kpi, kpi.value)}
                 {unitSuffix[kpi.key] && (
                   <span className="ml-0.5 text-[16px] font-semibold">{unitSuffix[kpi.key]}</span>
                 )}
               </span>
-              <ChangeBadge change={kpi.change} unit={kpi.unit} />
+              <div className="mt-1">
+                <KpiComparisonTicker kpi={kpi} />
+              </div>
             </dd>
           </div>
         ))}
