@@ -1,0 +1,10 @@
+# 전체 실행 (배포). docker compose -f compose.prod.yaml up -d --build
+name: claude-admin
+
+include:
+  - path:
+      - backend/compose.yaml
+      - backend/compose.prod.yaml
+  - path:
+      - frontend/compose.yaml
+      - frontend/compose.prod.yaml

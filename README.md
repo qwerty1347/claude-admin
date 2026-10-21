@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# claude-admin
 
-## Getting Started
+한국어 관리자(Admin) 대시보드예요. 저장소 하나에 프론트와 백엔드가 같이 있어요.
 
-First, run the development server:
+| 폴더 | 내용 |
+|---|---|
+| `frontend/` | Next.js 16, React 19, TypeScript, Tailwind CSS v4, ECharts 6 |
+| `backend/` | FastAPI (Python 3.12, uv), MySQL 9.7 |
+| `docs/` | 계획 문서 |
+
+## 실행 (도커)
+Docker만 있으면 돼요.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp backend/.env.example backend/.env   # 처음 한 번 (개발용 DB 접속 정보가 들어 있어요)
+docker compose up -d --build           # 프로젝트 루트에서
 ```
 
-Open [http://localhost:3001](http://localhost:3001) with your browser to see the result.
+| 주소 | |
+|---|---|
+| http://localhost:3001/admin | 관리자 화면 |
+| http://localhost:9101/docs | API 문서 |
+| `127.0.0.1:3306` | MySQL (`admin` / `admin`, DB `fastapi`) |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 끄기: `docker compose down` (DB 데이터는 남아요)
+- 코드는 저장하면 바로 반영돼요. Dockerfile이나 패키지를 바꿨을 때만 `--build`를 붙여요.
+- 한 프로젝트만 띄우려면 그 폴더(`frontend/`, `backend/`)에서 `docker compose up -d`를 실행해요.
+- XAMPP MySQL과 포트(3306)가 같아서 동시에 켜지 않아요.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 실행 (로컬)
+Node, uv가 설치돼 있어야 해요.
 
-## Learn More
+```bash
+cd backend && uv run fastapi dev --port 9101
+cd frontend && npm install && npm run dev   # frontend/.env.example 을 .env.local 로 복사
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 문서
+- `docs/0 DOCKER-PLAN.md`: 도커·모노레포 구성
+- `docs/1 PROJECT-PLAN.md`: 초기 설계
+- `docs/2 BACKEND-PLAN.md`: 백엔드 계획·규칙
+- `docs/3 REALTIME-PLAN.md`: 알림·실시간 기능 검토

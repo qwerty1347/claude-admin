@@ -1,0 +1,15 @@
+# 배포
+services:
+  fastapi:
+    build:
+      target: prod
+    restart: unless-stopped
+    ports:
+      - "9101:8000"                    # 앞단 Nginx/Caddy(HTTPS)가 여기로 전달
+    environment:
+      ENVIRONMENT: production
+      FRONTEND_HOST: ${FRONTEND_HOST}  # 서버 .env 에 실제 주소. 예: https://admin.example.com
+
+  mysql:
+    restart: unless-stopped
+    # ports 없음: DB 는 외부에 열지 않는다

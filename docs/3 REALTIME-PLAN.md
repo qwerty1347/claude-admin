@@ -1,7 +1,7 @@
 # 알림·실시간 통신 검토 (2026-10-19)
 
 ## Context
-헤더 오른쪽 위 종 아이콘(`src/components/layout/Header.tsx`)은 모양만 있어요.
+헤더 오른쪽 위 종 아이콘(`frontend/src/components/layout/Header.tsx`)은 모양만 있어요.
 - 빨간 점이 항상 켜져 있고(`Header.tsx:44`), 눌러도 동작이 없어요.
 - 여기에 넣을 기능과, 실시간 통신(SSE·WebSocket)을 써볼 만한 기능을 정리해요.
 - 아직 구현 방식은 정하지 않았어요. 아래 "결정할 것"을 정한 뒤 계획을 세워요.
@@ -77,7 +77,7 @@
 
 ## 구조상 알아둘 점
 - **브라우저가 FastAPI에 직접 연결해야 해요.**
-  지금 대시보드 데이터는 Next 서버가 백엔드를 불러 화면을 만들어요(`src/lib/api.ts`, 서버 전용 `API_URL`).
+  지금 대시보드 데이터는 Next 서버가 백엔드를 불러 화면을 만들어요(`frontend/src/lib/api.ts`, 서버 전용 `API_URL`).
   실시간 연결은 클라이언트 컴포넌트에서 열어야 해서 브라우저용 주소(`NEXT_PUBLIC_API_URL`)가 따로 필요해요.
 - **CORS·Origin**: 백엔드 CORS는 `FRONTEND_HOST`(`http://localhost:3001`)만 허용해 둬서 SSE는 그대로 돼요.
   WebSocket은 CORS 대상이 아니라서 연결할 때 `Origin` 헤더를 직접 확인해야 해요.

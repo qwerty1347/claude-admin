@@ -1,0 +1,39 @@
+# 공통. 개발: docker compose up (compose.override.yaml 자동 합침)
+#       배포: docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# ${DB_*} 값은 같은 폴더의 .env 에서 읽는다 (.env.example 복사)
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    container_name: claude_admin-fastapi
+    env_file: .env
+    environment:
+      SERVICE_TYPE: app                # .docker/entrypoint.sh 가 실행할 역할
+      # .env 의 DATABASE_URL(로컬 방식용 127.0.0.1:3306)을 컨테이너용 주소로 덮어쓴다
+      DATABASE_URL: mysql+aiomysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_NAME}?charset=utf8mb4
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:9.7
+    container_name: claude_admin-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul                   # DB 시간대 = 한국 시간 (NOW(), CURRENT_TIMESTAMP)
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s                # 첫 실행은 초기화로 오래 걸림
+
+volumes:
+  mysql_data:

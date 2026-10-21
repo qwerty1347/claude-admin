@@ -2,16 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-@AGENTS.md
+@frontend/AGENTS.md
 
 ## 프로젝트
 
-한국어 관리자(Admin) 대시보드. Next.js 16 (App Router, Turbopack) + React 19 + TypeScript + Tailwind CSS v4 + ECharts 6.
-백엔드는 `backend/` 의 FastAPI (Python 3.12, uv). 아직 DB 없이 mock 데이터를 API로 내려준다. 상세 계획은 `docs/BACKEND-PLAN.md`.
+한국어 관리자(Admin) 대시보드. 저장소 하나에 두 프로젝트가 있는 모노레포다.
+- `frontend/`: Next.js 16 (App Router, Turbopack) + React 19 + TypeScript + Tailwind CSS v4 + ECharts 6
+- `backend/`: FastAPI (Python 3.12, uv). 아직 DB 없이 mock 데이터를 API로 내려준다. 계획·규칙은 `docs/2 BACKEND-PLAN.md`
+- 도커: 루트 `compose.yaml`(include)로 nextjs·fastapi·mysql 컨테이너를 한 번에 띄운다. 각 폴더의 compose 로 따로도 띄울 수 있다. 상세는 `docs/0 DOCKER-PLAN.md`
+- 아래 경로 중 `src/...`, `app/...`(프론트) 는 `frontend/` 기준이다.
 
 ## 명령어
 
 ```bash
+docker compose up -d             # 루트: 전체 (프론트 :3001, 백엔드 :9101, MySQL :3306)
+docker compose up -d --build     # Dockerfile·entrypoint·패키지 목록을 바꿨을 때
+docker compose down              # 끄기 (DB 데이터는 볼륨에 남음, -v 는 데이터까지 삭제)
+docker compose exec fastapi uv run pytest -q
+```
+
+```bash
+cd frontend
 npm run dev      # 개발 서버 → http://localhost:3001 (/ 는 /admin 으로 리다이렉트)
 npm run build    # 프로덕션 빌드 (타입 검사 포함)
 npm run lint     # ESLint
@@ -20,15 +31,19 @@ npx tsc --noEmit # 타입 검사만
 
 ```bash
 cd backend
-uv run fastapi dev --port 9101   # 백엔드 → http://127.0.0.1:9101/docs (8000은 이 PC에서 다른 프로세스가 사용 중)
+uv run fastapi dev --port 9101   # 백엔드 → http://127.0.0.1:9101/docs
 uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run ty check
 ```
 
-- 프론트는 `.env.local` 의 `API_URL` 이 있으면 백엔드를 부르고, 없으면 mock 데이터를 쓴다 (예시: `.env.example`).
+- 도커 실행과 로컬 실행(`npm run dev`, `uv run fastapi dev`)은 포트가 같아서 동시에 쓰지 않는다.
+- 프론트는 `API_URL` 이 있으면 백엔드를 부르고, 없으면 mock 데이터를 쓴다.
+  로컬은 `frontend/.env.local`(예시: `frontend/.env.example`), 도커는 `frontend/compose.override.yaml`(`host.docker.internal:9101`).
   `localhost` 가 아니라 `127.0.0.1` 로 적는다 (Node fetch 가 `::1` 로 풀면 연결 안 됨).
+- 백엔드 설정은 `backend/.env`(예시: `backend/.env.example`, 개발 DB 접속 정보 포함). 도커 compose 도 이 파일을 읽는다.
 - 프론트 테스트 프레임워크는 아직 없다. 백엔드는 pytest.
 - 이 폴더는 XAMPP `htdocs` 아래지만 Apache 주소(`localhost/www/...`)로는 동작하지 않는다. 반드시 `:3001`.
-- Node 20.15 환경이라 일부 ESLint 의존성이 엔진 경고를 내지만 lint는 통과한다.
+  MySQL 은 도커가 3306 을 쓰므로 XAMPP MySQL 과 동시에 켜지 않는다.
+- 로컬 Node 는 20.15 (도커 이미지는 node:24). 일부 ESLint 의존성이 엔진 경고를 내지만 lint는 통과한다.
 
 ## 아키텍처
 
@@ -88,5 +103,6 @@ lib/mock-data.ts (API_URL 없을 때)      ┴→  lib/api.ts (request<T>)  → 
   건드려, **Playwright로 페이지를 열어 둔 채 소스를 수정하면 Fast Refresh가 무한 반복**된다.
   소스 수정 전 `browser_close`, 확인할 때만 다시 연다. ECharts는 그려지기까지 시간이 걸리므로 스크린샷 전 1~2초 대기.
 - 개발 서버가 이미 3001 포트에서 떠 있으면 두 번째 `next dev` 는 바로 종료된다 (기존 서버를 쓰면 됨).
-- `docs/PLAN.md` 에 초기 설계 플랜, `docs/BACKEND-PLAN.md` 에 백엔드 계획·규칙이 있다.
+- 문서: `docs/0 DOCKER-PLAN.md`(도커·모노레포), `docs/1 PROJECT-PLAN.md`(초기 설계), `docs/2 BACKEND-PLAN.md`(백엔드 계획·규칙), `docs/3 REALTIME-PLAN.md`(알림·실시간 검토).
+- `.sh` 파일은 `.gitattributes` 로 LF 고정 (CRLF 면 컨테이너에서 실행 안 됨).
 - FastAPI 공식 스킬은 `.claude/skills/fastapi/` 에 있다. 백엔드 코드는 이 스킬 규칙(Annotated, 반환 타입, 기본 `def`)을 따른다.

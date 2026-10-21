@@ -1,8 +1,8 @@
 # FastAPI 백엔드 1단계 계획 (공식 스킬 적용)
 
 ## Context
-대시보드 데이터는 `src/lib/mock-data.ts`에 하드코딩되어 있고, 컴포넌트는 `src/lib/api.ts`만 호출해요.
-`backend/`의 FastAPI가 `src/types/dashboard.ts`와 같은 JSON을 내려주게 하고, 프론트는 `api.ts`만 바꿔요.
+대시보드 데이터는 `frontend/src/lib/mock-data.ts`에 하드코딩되어 있고, 컴포넌트는 `frontend/src/lib/api.ts`만 호출해요.
+`backend/`의 FastAPI가 `frontend/src/types/dashboard.ts`와 같은 JSON을 내려주게 하고, 프론트는 `api.ts`만 바꿔요.
 요구는 세 가지예요.
 - 공식 기준만 따라요.
 - 확장 가능한 구조로 만들어요.
@@ -62,7 +62,7 @@ backend/
 - Python에는 전역 헬퍼가 없어서 모듈에 두고 import해서 써요.
 - 범용 함수(두 곳 이상에서 사용) → `app/utils.py`. 많아지면 `app/utils/` 패키지(`text.py`, `money.py` …)로 나눠요.
 - 한 기능에서만 쓰는 함수 → 그 기능 근처(`crud/<도메인>.py` 등). 앱 기반 기능(설정·시간·보안·DB) → `app/core/`.
-- 화면 표시용 포맷은 프론트 `src/lib/format.ts` 담당이에요. 백엔드는 원래 값을 내려줘요.
+- 화면 표시용 포맷은 프론트 `frontend/src/lib/format.ts` 담당이에요. 백엔드는 원래 값을 내려줘요.
 
 ## 확장 구조
 - 라우트는 리소스마다 파일 하나예요. `api/v1/routes/{orders,products,users,settings,login}.py`. [TPL][DOC]
@@ -219,20 +219,20 @@ kpis, revenue-trend, category-shares, traffic-sources, hourly-traffic, recent-or
 cd backend
 uv add pydantic-settings tzdata
 uv add --dev ruff ty pytest      # httpx는 fastapi[standard]에 포함 (0.28.1 확인)
-uv run fastapi dev --port 9101   # 8000은 이 PC에서 다른 프로세스가 사용 중
+uv run fastapi dev --port 9101   # (도커는 루트에서 docker compose up -d, 0 DOCKER-PLAN.md)
 uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run ty check
 ```
 - ruff는 `select`에 `"FAST"`(FastAPI 규칙, 확인함)를 추가하고, 나머지는 템플릿 규칙을 기준으로 해요.
 - 타입 검사는 mypy 대신 ty를 써요. [SKILL]
 
-## 프론트 (`src/lib/api.ts`만)
+## 프론트 (`frontend/src/lib/api.ts`만)
 - `request<T>(path, fallback)`를 만들어요.
   - `API_URL`이 없으면 mock을 반환해요.
   - 있으면 `${API_URL}/api/v1${path}`로 fetch해요.
   - `res.ok`면 응답 틀에서 `.data`만 꺼내 반환해요. 컴포넌트는 지금처럼 데이터만 받아요.
   - `!res.ok`면 본문(`ApiError`)의 `code`/`message`를 담아 throw해요.
 - `getNavBadges`는 `getTodos()`를 쓰게 바꿔요.
-- `.env.local`에는 `API_URL=http://127.0.0.1:9101`을 넣어요 (예시: 루트 `.env.example`).
+- `frontend/.env.local`에는 `API_URL=http://127.0.0.1:9101`을 넣어요 (예시: `frontend/.env.example`). 도커에서는 `frontend/compose.override.yaml`의 값이 우선이에요.
   - `localhost` 대신 `127.0.0.1`: Node 20 fetch가 `localhost`를 IPv6(`::1`)로 풀면 uvicorn(127.0.0.1)에 연결되지 않아요.
 - `try/catch`에서 `unstable_rethrow(e)`를 먼저 불러요. 빌드 중 `no-store` fetch가 던지는 Next 내부 신호(DYNAMIC_SERVER_USAGE)를 삼키면 빌드가 실패해요.
 - `getTodos`는 `React.cache`로 묶어요. 레이아웃(배지)과 페이지가 함께 부르는데, `signal` 옵션 때문에 fetch 자동 중복 제거가 안 돼요.
@@ -241,11 +241,11 @@ uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run t
     (`node_modules/next/dist/docs/01-app/02-guides/caching-without-cache-components.md:111`).
   - 그대로 두면 백엔드가 꺼져 있을 때 build가 실패하고, 켜져 있으면 빌드 시점 값으로 굳어요.
 - `signal: AbortSignal.timeout(5000)`으로 백엔드가 응답하지 않을 때 무한 대기를 막아요.
-- 에러 화면: `src/app/admin/error.tsx`(페이지 데이터 실패) + `src/app/error.tsx`.
+- 에러 화면: `frontend/src/app/admin/error.tsx`(페이지 데이터 실패) + `frontend/src/app/error.tsx`.
   `getNavBadges`는 `admin/layout.tsx`에서 호출돼서 `admin/error.tsx`로는 잡히지 않아요.
 - KPI의 매출 `value`/`change`는 `crud/dashboard.py`에서 `revenue_trend`의 마지막 두 달로 `utils.percent_change()`를 써서 계산해요 (CLAUDE.md 원천 데이터 규칙).
 - API 연동이 확인되면 `mock-data.ts` 대체 경로를 없애서 mock을 백엔드 하나로 줄여요.
-- 루트 `.env.example`(API_URL)을 커밋하려면 `.gitignore`에 `!/.env.example`을 추가해요.
+- `.env.example`은 커밋해요. 루트 `.gitignore`의 `!.env.example`이 모든 폴더에 적용돼요.
 
 ## 구현 순서와 검증
 1. 의존성 추가 → `core/config.py`, `core/clock.py`, `main.py`, `api/main.py`, `api/v1/routes/utils.py` ✅ 2026-10-19 완료

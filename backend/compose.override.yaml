@@ -1,0 +1,16 @@
+# 개발
+services:
+  fastapi:
+    build:
+      target: dev
+    ports:
+      - "9101:8000"
+    volumes:
+      - ./:/app
+      - /app/.venv                     # 컨테이너(Linux)용 가상환경. 호스트 .venv 로 덮이지 않게
+    environment:
+      WATCHFILES_FORCE_POLLING: "true" # Windows 마운트에서 변경 감지
+
+  mysql:
+    ports:
+      - "3306:3306"                    # DB 툴, 로컬 방식 백엔드 접속용 (XAMPP MySQL 과 같은 포트라 동시에 켜지 않는다)
