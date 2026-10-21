@@ -1,0 +1,11 @@
+# 전체 실행 (개발). 루트에서 docker compose up -d → Docker Desktop 에 claude-admin 하나로 묶여 보인다
+# 각 폴더(frontend/, backend/)에서 따로 띄울 수도 있다. 단 루트 실행과 동시에 쓰지 않는다 (container_name 충돌)
+name: claude-admin
+
+include:
+  - path:
+      - backend/compose.yaml
+      - backend/compose.override.yaml
+  - path:
+      - frontend/compose.yaml
+      - frontend/compose.override.yaml

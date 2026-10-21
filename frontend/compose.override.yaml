@@ -1,0 +1,17 @@
+# 개발
+services:
+  nextjs:
+    build:
+      target: dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./:/app
+      - /app/node_modules              # 컨테이너(Linux)용 패키지. 호스트 것으로 덮이지 않게
+      - /app/.next
+    environment:
+      # fastapi 는 다른 compose 프로젝트라서 호스트에 열린 9101 로 부른다 (.env.local 보다 우선)
+      API_URL: http://host.docker.internal:9101
+      WATCHPACK_POLLING: "true"        # Windows 마운트에서 변경 감지
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

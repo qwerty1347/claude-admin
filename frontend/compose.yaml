@@ -1,0 +1,8 @@
+# 공통. 개발: docker compose up (compose.override.yaml 자동 합침)
+#       배포: docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+services:
+  nextjs:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    container_name: claude_admin-nextjs
