@@ -20,7 +20,7 @@ npx tsc --noEmit # 타입 검사만
 
 ```bash
 cd backend
-uv run fastapi dev --port 8010   # 백엔드 → http://127.0.0.1:8010/docs (8000은 이 PC에서 다른 프로세스가 사용 중)
+uv run fastapi dev --port 9101   # 백엔드 → http://127.0.0.1:9101/docs (8000은 이 PC에서 다른 프로세스가 사용 중)
 uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run ty check
 ```
 
