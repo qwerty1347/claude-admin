@@ -1,7 +1,7 @@
 """현재 시각은 이 모듈을 통해서만 얻는다. datetime.now()를 직접 호출하지 않는다.
 
-- utcnow(): 저장·기록용 (created_at, 로그 등)
-- now():    업무 기준 시각용 ('오늘 0시' 경계, 화면에 보여줄 시각). settings.TIMEZONE 기준
+- now():    업무 기준 시각이자 DB 저장용 (settings.TIMEZONE, KST). '오늘 0시' 경계, 화면에 보여줄 시각
+- utcnow(): UTC 를 요구하는 외부 연동용 (외부 API, 토큰 만료 시각 등)
 """
 
 from datetime import UTC, datetime
