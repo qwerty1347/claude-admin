@@ -1,6 +1,6 @@
 """대시보드 집계 테이블. 미리 계산해 둔 통계를 화면이 그대로 읽는다.
 
-지금은 시드(app/initial_data.py)가 채우고, 실제 주문이 쌓이면 배치 작업이 orders 등을 집계해서 채운다.
+지금은 시드(app/seeds/dashboard.py)가 채우고, 실제 주문이 쌓이면 배치 작업이 orders 등을 집계해서 채운다.
 """
 
 from datetime import date

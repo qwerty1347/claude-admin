@@ -1,4 +1,4 @@
-"""대시보드 시드 데이터. 실행: uv run python -m app.initial_data
+"""대시보드 시드 데이터.
 
 mock(2026-09-30 13:50 기준 스냅샷)의 숫자를 기준 시각 now 에 맞춰 상대 날짜로 넣는다.
 - 실행할 때는 clock.now(), 테스트할 때는 고정 시각을 넣는다.
@@ -6,7 +6,6 @@ mock(2026-09-30 13:50 기준 스냅샷)의 숫자를 기준 시각 now 에 맞�
 - commit 은 호출하는 쪽이 한다.
 """
 
-import logging
 import math
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -14,9 +13,7 @@ from decimal import Decimal
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from app.core import clock
 from app.core.config import settings
-from app.core.db import SessionLocal
 from app.models import (
     Customer,
     DailyMetric,
@@ -30,8 +27,6 @@ from app.models import (
     Product,
 )
 from app.utils import round_half_up, year_month
-
-logger = logging.getLogger(__name__)
 
 # 월별: 11개월 전 ~ 이번 달 (12개)
 MONTHLY_REVENUE = [
@@ -447,17 +442,3 @@ def seed(session: Session, now: datetime) -> None:
     )
     session.add_all(_build_stats(now))
     session.flush()
-
-
-def main() -> None:
-    logging.basicConfig(level=logging.INFO)
-    now = clock.now()
-    logger.info("시드 시작 (기준 시각 %s)", now.isoformat(timespec="minutes"))
-    with SessionLocal() as session:
-        seed(session, now)
-        session.commit()
-    logger.info("시드 완료")
-
-
-if __name__ == "__main__":
-    main()

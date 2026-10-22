@@ -20,8 +20,8 @@
 - **확인**: DB 툴에서 테이블 9개, 컬럼, 인덱스, `alembic_version` → 커밋
 
 ### 3. 시드
-- `app/initial_data.py`: mock 상수를 옮기고 `seed(session, now)`로 상대 날짜 데이터를 넣어요.
-- `uv run python -m app.initial_data`
+- `app/seeds/dashboard.py`: mock 상수를 옮기고 `seed(session, now)`로 상대 날짜 데이터를 넣어요.
+- `uv run python -m app.seeds`
 - **확인**: 테이블별 행 수, 오늘 주문 합계 4,120,000, `paid` 12건 등. 다시 실행해도 행 수가 같은지 → 커밋
 
 ### 4. crud와 라우트를 DB 조회로 교체
@@ -111,7 +111,7 @@ mock 데이터를 DB에 넣고, 대시보드 API 8개가 DB에서 읽도록 바�
 | `app/main.py` | lifespan: 종료 시 두 엔진 dispose |
 | `app/models/` | `customer.py`, `order.py`, `product.py`, `inquiry.py`, `stats.py`. `__init__.py`에서 전부 import (Alembic이 찾도록) |
 | `alembic/`, `alembic.ini` | 마이그레이션 |
-| `app/initial_data.py` | 시드 (mock 상수를 여기로 옮김) |
+| `app/seeds/` | 개발·데모용 시드 (`dashboard.py`에 mock 상수를 옮김, `python -m app.seeds`로 실행) |
 | `app/crud/dashboard.py` | async 함수로 DB 조회 |
 | `app/api/v1/routes/dashboard.py` | `async def` + `AsyncSessionDep` |
 | `.docker/mysql/init/01-create-test-db.sh` | 테스트 DB 생성 |
@@ -140,7 +140,7 @@ uv run alembic upgrade head
 - `alembic.ini`: `post_write_hooks`로 ruff format을 걸어서, 생성된 리비전 파일도 포맷이 맞게 해요.
 - 마이그레이션은 entrypoint에서 자동으로 실행하지 않고 명시적으로 실행해요. 서버가 여러 대일 때 동시에 실행되는 문제를 피하려는 실무 관례예요.
 
-## 시드 (`app/initial_data.py`)
+## 시드 (`app/seeds/dashboard.py`)
 - 함수 모양은 `seed(session, now)`예요. **기준 시각 `now`를 받아서 상대 날짜로** 넣어요.
   - mock은 2026-09-30 기준 스냅샷이에요. DB로 바꾸면 "이번 달", "오늘"이 실제 현재 시각 기준이 돼요.
   - 실행할 때는 `clock.now()`, 테스트할 때는 고정 시각을 넣어요.
@@ -155,7 +155,7 @@ uv run alembic upgrade head
 | `hourly_visits` | `_hourly_value(h, d)` 168행 |
 
 - 다시 실행해도 같은 결과가 나와요(idempotent). 대상 테이블을 비우고 다시 넣어요.
-- 실행: `uv run python -m app.initial_data`
+- 실행: `uv run python -m app.seeds`
 
 ## API별 조회 (`app/crud/dashboard.py`)
 | API | 읽는 곳 |
@@ -220,7 +220,7 @@ uv add --dev ipykernel     # 노트북 커널 복구 (.venv 재생성 때 사라
 docker compose down -v                                         # 처음 한 번 (테스트 DB init 스크립트 실행용)
 docker compose up -d --build
 docker compose exec fastapi uv run alembic upgrade head        # 테이블 생성
-docker compose exec fastapi uv run python -m app.initial_data  # 시드
+docker compose exec fastapi uv run python -m app.seeds  # 시드
 ```
 
 ## 확인 방법
