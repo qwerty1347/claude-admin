@@ -10,9 +10,10 @@ const statusStyle: Record<OrderStatus, { label: string; className: string }> = {
   shipping: { label: "배송 중", className: "bg-[#fff3e0] text-[#e67700]" },
   delivered: { label: "배송 완료", className: "bg-[#e5f8ef] text-[#028a52]" },
   cancelled: { label: "취소", className: "bg-canvas text-muted" },
+  refund_requested: { label: "환불 요청", className: "bg-[#ffeef0] text-rise" },
 };
 
-const filters: ("all" | OrderStatus)[] = ["all", "paid", "shipping", "delivered", "cancelled"];
+const filters: ("all" | OrderStatus)[] = ["all", "paid", "shipping", "delivered", "cancelled", "refund_requested"];
 
 export default function RecentOrders({ orders }: { orders: Order[] }) {
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");

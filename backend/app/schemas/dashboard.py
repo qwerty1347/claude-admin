@@ -54,7 +54,7 @@ class HourlyTraffic(CamelModel):
     """[hourIndex, dayIndex, value]"""
 
 
-OrderStatus = Literal["paid", "shipping", "delivered", "cancelled"]
+OrderStatus = Literal["paid", "shipping", "delivered", "cancelled", "refund_requested"]
 
 
 class RecentOrder(CamelModel):

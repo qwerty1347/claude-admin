@@ -8,7 +8,7 @@ mock(2026-09-30 13:50 기준 스냅샷)의 숫자를 기준 시각 now 에 맞�
 
 import logging
 import math
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import delete
@@ -29,7 +29,7 @@ from app.models import (
     OrderStatus,
     Product,
 )
-from app.utils import round_half_up
+from app.utils import round_half_up, year_month
 
 logger = logging.getLogger(__name__)
 
@@ -246,12 +246,6 @@ SEED_MODELS = [
 ]
 
 
-def _year_month(day: date, months_ago: int) -> str:
-    """day 가 속한 달에서 months_ago 개월 전. 예: _year_month(date(2026, 1, 5), 1) == "2025-12" """
-    index = day.year * 12 + day.month - 1 - months_ago
-    return f"{index // 12}-{index % 12 + 1:02d}"
-
-
 def _spread(total: int, n: int) -> list[int]:
     """total 을 n 개로 최대한 고르게 나눈다. 예: _spread(10, 3) == [4, 3, 3]"""
     base, extra = divmod(total, n)
@@ -369,7 +363,7 @@ def _build_stats(
     | DailyMetric
 ]:
     today = now.date()
-    this_month = _year_month(today, 0)
+    this_month = year_month(today)
 
     rows: list[
         MonthlyMetric
@@ -378,12 +372,12 @@ def _build_stats(
         | HourlyVisit
         | DailyMetric
     ] = [
-        MonthlyMetric(year_month=_year_month(today, 12), **LAST_YEAR_SAME_MONTH),
+        MonthlyMetric(year_month=year_month(today, 12), **LAST_YEAR_SAME_MONTH),
     ]
     for i in range(12):
         rows.append(
             MonthlyMetric(
-                year_month=_year_month(today, 11 - i),
+                year_month=year_month(today, 11 - i),
                 revenue=MONTHLY_REVENUE[i],
                 orders=MONTHLY_ORDERS[i],
                 signups=MONTHLY_SIGNUPS[i],
