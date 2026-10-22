@@ -1,6 +1,6 @@
-"""조회·저장 함수. 도메인별 파일로 나눈다 (schemas/ 와 같은 이름).
+"""테이블 단위 조회·저장 함수. 테이블(app/models/)과 같은 이름의 파일로 나눈다.
 
-    from app.crud import dashboard as dashboard_crud
+    from app.crud import order as order_crud
 
-업무 규칙이 두꺼워지는 도메인은 services/ 로 뽑아낸다.
+화면에 맞춘 계산·조립은 services/ 에서 한다. 여기는 다른 화면에서도 다시 쓸 수 있는 쿼리만 둔다.
 """

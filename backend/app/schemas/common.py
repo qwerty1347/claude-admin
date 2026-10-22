@@ -1,5 +1,6 @@
 """모든 API 가 공유하는 스키마: camelCase 베이스, 공통 응답 틀."""
 
+from fastapi import status
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
@@ -22,7 +23,7 @@ class CamelModel(BaseModel):
 class ApiResponse[T](CamelModel):
     """성공 응답: {"statusCode": 200, "code": "OK", "data": ...}"""
 
-    status_code: int = 200
+    status_code: int = status.HTTP_200_OK
     code: str = "OK"
     data: T
 

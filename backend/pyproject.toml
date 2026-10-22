@@ -3,13 +3,19 @@ name = "claude-admin-api"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "aiomysql>=0.3.2",
+    "alembic>=1.20.0",
+    "cryptography>=50.0.2",
     "fastapi[standard]>=0.143.0",
     "pydantic-settings>=2.15.0",
+    "pymysql>=1.2.3",
+    "sqlalchemy[asyncio]>=2.1.5",
     "tzdata>=2026.5",
 ]
 
 [dependency-groups]
 dev = [
+    "ipykernel>=7.4.0",
     "pytest>=9.1.1",
     "ruff>=0.17.1",
     "ty>=0.0.89",
@@ -42,3 +48,11 @@ ignore = [
     "W191",  # indentation contains tabs
     "B904",  # Allow raising exceptions without from e, for HTTPException
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic 템플릿의 첫 리비전은 "Revises: " 뒤에 공백이 남는다 (자동 생성 파일이라 규칙만 끈다)
+"alembic/versions/*" = ["W291"]
+
+[tool.ruff.lint.isort]
+# 마이그레이션 폴더 이름이 alembic/ 이라 ruff 가 alembic 패키지를 우리 코드로 착각하지 않게
+known-third-party = ["alembic"]

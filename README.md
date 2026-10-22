@@ -24,7 +24,6 @@ docker compose up -d --build           # 프로젝트 루트에서
 - 끄기: `docker compose down` (DB 데이터는 남아요)
 - 코드는 저장하면 바로 반영돼요. Dockerfile을 바꿨으면 `--build`, 패키지 목록을 바꿨으면 `--build -V`를 붙여요.
 - 한 프로젝트만 띄우려면 그 폴더(`frontend/`, `backend/`)에서 `docker compose up -d`를 실행해요. 루트 실행과 같이 쓰지는 않아요.
-- XAMPP MySQL과 포트(3306)가 같아서 둘을 같이 켤 수 없어요.
 
 ## 실행 (로컬)
 

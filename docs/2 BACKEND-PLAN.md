@@ -66,7 +66,7 @@ backend/
 
 ## 확장 구조
 - 라우트는 리소스마다 파일 하나예요. `api/v1/routes/{orders,products,users,settings,login}.py`. [TPL][DOC]
-- DB를 도입할 때 추가할 것: `core/db.py`(엔진·세션, 비동기+동기), `core/security.py`, `alembic/`, `initial_data.py`(mock을 시드로 옮김), `api/deps.py`의 `AsyncSessionDep`/`SessionDep`/`CurrentUserDep`. [TPL] 자세한 건 아래 "DB 접근"
+- DB를 도입할 때 추가할 것: `core/db.py`(엔진·세션, 비동기+동기), `core/security.py`, `alembic/`, `seeds/`(개발·데모용 시드, mock을 옮김), `api/deps.py`의 `AsyncSessionDep`/`SessionDep`/`CurrentUserDep`. [TPL] 자세한 건 아래 "DB 접근"
 - 스키마(API 형태)는 `schemas/<도메인>.py`로 이미 나눴어요 (2026-10-19). DB 테이블 모델은 도입할 때 `models/<엔티티>.py`에 따로 둬요. DB 컬럼과 API로 내보내는 형태는 다를 수 있어서 구분해요. [TPL-0.5]
 - 조회·저장 함수도 `crud/<도메인>.py`로 나눴어요 (2026-10-19). 라우트에서는 `from app.crud import dashboard as dashboard_crud`로 써요.
 - 업무 규칙(상태 변경, 검증, 여러 테이블 처리)이 두꺼워지는 도메인만 `services/<도메인>.py`로 뽑아내요. 처음부터 계층을 나누지는 않아요.
@@ -171,7 +171,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 | API 라우트 (기본) | `async def` + `AsyncSessionDep` | DB 대기 중에 다른 요청을 처리해요. 스킬 규칙의 "확실히 논블로킹일 때만 async"에 해당해요 |
 | 동기 라이브러리를 같이 쓰는 라우트 (엑셀 생성 등) | `def` + `SessionDep` | FastAPI가 스레드풀에서 실행해서 이벤트 루프를 막지 않아요 |
 | Alembic 마이그레이션 | 동기 (`alembic init alembic`, `database_url_sync`) | 기본 템플릿 그대로라 단순해요 |
-| 시드(`initial_data.py`), 관리 스크립트 | 동기 `SessionLocal()` | `asyncio.run` 없이 바로 실행해요 |
+| 시드(`app/seeds/`), 관리 스크립트 | 동기 `SessionLocal()` | `asyncio.run` 없이 바로 실행해요 |
 | 노트북 | 동기 `SessionLocal()` | Windows Jupyter의 이벤트 루프 문제를 피해요 (fastapi-tistory의 `run_async` 우회가 필요 없어요) |
 | 테스트 데이터 준비 | 동기 `SessionLocal()` | API 호출은 TestClient로 하면 async 라우트도 그대로 테스트돼요 |
 

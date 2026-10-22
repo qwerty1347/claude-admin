@@ -5,6 +5,7 @@
 """
 
 import math
+from datetime import date
 
 
 def round_half_up(x: float) -> int:
@@ -23,3 +24,9 @@ def percent_change(current: float, previous: float, ndigits: int = 1) -> float:
     if previous == 0:
         raise ValueError("previous must not be 0")
     return round((current - previous) / previous * 100, ndigits)
+
+
+def year_month(day: date, months_ago: int = 0) -> str:
+    """day 가 속한 달에서 months_ago 개월 전의 "YYYY-MM". 예: year_month(date(2026, 1, 5), 1) == "2025-12" """
+    index = day.year * 12 + day.month - 1 - months_ago
+    return f"{index // 12}-{index % 12 + 1:02d}"

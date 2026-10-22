@@ -45,7 +45,7 @@ export type HourlyTraffic = {
   values: [number, number, number][];
 };
 
-export type OrderStatus = "paid" | "shipping" | "delivered" | "cancelled";
+export type OrderStatus = "paid" | "shipping" | "delivered" | "cancelled" | "refund_requested";
 
 export type Order = {
   id: string;

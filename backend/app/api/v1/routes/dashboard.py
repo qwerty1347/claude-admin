@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.crud import dashboard as dashboard_crud
+from app.api.deps import AsyncSessionDep
 from app.schemas import (
     ApiResponse,
     CategoryShare,
@@ -12,45 +12,52 @@ from app.schemas import (
     TodoSummary,
     TrafficSource,
 )
+from app.services import dashboard as dashboard_service
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 @router.get("/kpis")
-def read_kpis() -> ApiResponse[list[Kpi]]:
-    return ApiResponse(data=dashboard_crud.get_kpis())
+async def read_kpis(session: AsyncSessionDep) -> ApiResponse[list[Kpi]]:
+    return ApiResponse(data=await dashboard_service.get_kpis(session))
 
 
 @router.get("/revenue-trend")
-def read_revenue_trend() -> ApiResponse[RevenueTrend]:
-    return ApiResponse(data=dashboard_crud.get_revenue_trend())
+async def read_revenue_trend(session: AsyncSessionDep) -> ApiResponse[RevenueTrend]:
+    return ApiResponse(data=await dashboard_service.get_revenue_trend(session))
 
 
 @router.get("/category-shares")
-def read_category_shares() -> ApiResponse[list[CategoryShare]]:
-    return ApiResponse(data=dashboard_crud.get_category_shares())
+async def read_category_shares(
+    session: AsyncSessionDep,
+) -> ApiResponse[list[CategoryShare]]:
+    return ApiResponse(data=await dashboard_service.get_category_shares(session))
 
 
 @router.get("/traffic-sources")
-def read_traffic_sources() -> ApiResponse[list[TrafficSource]]:
-    return ApiResponse(data=dashboard_crud.get_traffic_sources())
+async def read_traffic_sources(
+    session: AsyncSessionDep,
+) -> ApiResponse[list[TrafficSource]]:
+    return ApiResponse(data=await dashboard_service.get_traffic_sources(session))
 
 
 @router.get("/hourly-traffic")
-def read_hourly_traffic() -> ApiResponse[HourlyTraffic]:
-    return ApiResponse(data=dashboard_crud.get_hourly_traffic())
+async def read_hourly_traffic(session: AsyncSessionDep) -> ApiResponse[HourlyTraffic]:
+    return ApiResponse(data=await dashboard_service.get_hourly_traffic(session))
 
 
 @router.get("/recent-orders")
-def read_recent_orders() -> ApiResponse[list[RecentOrder]]:
-    return ApiResponse(data=dashboard_crud.get_recent_orders())
+async def read_recent_orders(
+    session: AsyncSessionDep,
+) -> ApiResponse[list[RecentOrder]]:
+    return ApiResponse(data=await dashboard_service.get_recent_orders(session))
 
 
 @router.get("/todos")
-def read_todos() -> ApiResponse[TodoSummary]:
-    return ApiResponse(data=dashboard_crud.get_todos())
+async def read_todos(session: AsyncSessionDep) -> ApiResponse[TodoSummary]:
+    return ApiResponse(data=await dashboard_service.get_todos(session))
 
 
 @router.get("/today-revenue")
-def read_today_revenue() -> ApiResponse[TodayRevenue]:
-    return ApiResponse(data=dashboard_crud.get_today_revenue())
+async def read_today_revenue(session: AsyncSessionDep) -> ApiResponse[TodayRevenue]:
+    return ApiResponse(data=await dashboard_service.get_today_revenue(session))
